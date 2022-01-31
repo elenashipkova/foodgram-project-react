@@ -1,7 +1,8 @@
 from django.contrib.auth import get_user_model
+from django.db.models import Sum
 from django.http.response import HttpResponse
 from django.shortcuts import get_object_or_404
-from rest_framework import status
+from rest_framework import mixins, status, views, viewsets
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -10,7 +11,6 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from recipes.models import (FavoritesList, Follow, Ingredient,
                             IngredientRecipe, Recipe, ShoppingList, Tag)
-
 from .filters import IngredientFilter, RecipeFilter
 from .permissions import IsAuthorOrAdmin
 from .serializers import (FavoritesListSerializer, FollowSerializer,
@@ -83,84 +83,67 @@ class FollowViewSet(ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class FavoritesListViewSet(APIView):
-    permission_classes = (IsAuthenticated,)
+class RecipeInFavoritesAndShoppingListViewSet(mixins.CreateModelMixin,
+                                             mixins.DestroyModelMixin,
+                                             mixins.ListModelMixin,
+                                             mixins.RetrieveModelMixin,
+                                             viewsets.GenericViewSet):
     pagination_class = PageNumberPagination
-
-    def get(self, request, recipe_id):
-        user = request.user
-        data = {
-            'user': user.id,
-            'recipe': recipe_id,
-        }
-        serializer = FavoritesListSerializer(
-            data=data, context={'request': request}
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status.HTTP_201_CREATED)
-
-    def delete(self, request, recipe_id):
-        user = request.user
-        recipe = get_object_or_404(Recipe, id=recipe_id)
-        FavoritesList.objects.get(user=user, recipe=recipe).delete()
-        return Response(
-            'Рецепт успешно удален из избранного',
-            status.HTTP_204_NO_CONTENT
-        )
-
-
-class ShoppingListView(APIView):
     permission_classes = (IsAuthenticated,)
-    pagination_class = None
 
-    def get(self, request, recipe_id):
-        user = request.user
-        data = {
-            'user': user.id,
-            'recipe': recipe_id,
-        }
-        serializer = ShoppingListSerializer(
-            data=data, context={'request': request}
-        )
+    def create(self, request, *args, **kwargs):
+        data = request.data
+        data['recipe'] = kwargs.get('recipe_id')
+        data['user'] = request.user.id
+        serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status.HTTP_201_CREATED)
-
-    def delete(self, request, recipe_id):
-        user = request.user
-        recipe = get_object_or_404(Recipe, id=recipe_id)
-        ShoppingList.objects.get(user=user, recipe=recipe).delete()
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
         return Response(
-            'Рецепт успешно удален из списка покупок',
-            status.HTTP_204_NO_CONTENT
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers
         )
+
+    def destroy(self, request, *args, **kwargs):
+        user = request.user.id
+        recipe = kwargs.get('recipe_id')
+        instance = get_object_or_404(
+            self.Meta.model, user=user, recipe=recipe
+        )
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class FavoritesListViewSet(RecipeInFavoritesAndShoppingListViewSet):
+    queryset = FavoritesList.objects.order_by('-recipe__pub_date')
+    serializer_class = FavoritesListSerializer
+
+    class Meta:
+        model = FavoritesList
+
+
+class ShoppingListViewSet(RecipeInFavoritesAndShoppingListViewSet):
+    queryset = ShoppingList.objects.order_by('-created')
+    serializer_class = ShoppingListSerializer
+
+    class Meta:
+        model = ShoppingList
 
 
 class DownloadShoppingList(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
-        final_list = {}
 
-        ingredients = IngredientRecipe.objects.filter(recipe__shopping_cart__user=request.user)
-        for ingredient in ingredients:
-            amount = ingredient.amount
-            name = ingredient.ingredient.name
-            measurement_unit = ingredient.ingredient.measurement_unit
-
-            if name not in final_list:
-                final_list[name] = {
-                    'measurement_unit': measurement_unit,
-                    'amount': amount
-                }
-            else:
-                final_list[name]['amount'] += amount
+        shop_list = IngredientRecipe.objects.filter(
+            recipe__shopping_cart__user=request.user).values(
+                'ingredient__name', 'ingredient__measurement_unit').annotate(
+                    amount=Sum('amount')).order_by()
 
         download_list = []
-        for item in final_list:
-            download_list.append(f'{item} ({final_list[item]["measurement_unit"]}) - '
-                                 f'{final_list[item]["amount"]} \n')
+        for item in shop_list:
+            download_list.append(
+                f'{item} ({shop_list[item]["measurement_unit"]}) - '
+                f'{shop_list[item]["amount"]} \n')
         filename = 'shopping_cart.txt'
         response = HttpResponse(download_list, 'Content-Type: text/plain')
         response['Content-Disposition'] = f'attachment; filename={filename}'

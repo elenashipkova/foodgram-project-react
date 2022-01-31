@@ -1,7 +1,5 @@
 from django.contrib.auth import get_user_model
 from django.db import models
-from django.db.models import constraints
-from django.db.models.base import ModelState
 
 User = get_user_model()
 
@@ -40,11 +38,11 @@ class Recipe(models.Model):
     text = models.TextField('Описание рецепта')
     cooking_time = models.PositiveIntegerField('Время приготовления в мин')
     image = models.ImageField(
-        'Фото рецепта', upload_to='recipes/', blank=True, null=True
+        'Фото рецепта', upload_to='recipes/images/', blank=True, null=True
     )
     ingredients = models.ManyToManyField(
-        Ingredient, verbose_name='Ингредиенты',
-        through='IngredientRecipe'
+        Ingredient, through='IngredientRecipe',
+        verbose_name='Ингредиенты'
     )
     tags = models.ManyToManyField(
         Tag, verbose_name='Теги', related_name='recipes'
@@ -62,20 +60,29 @@ class Recipe(models.Model):
 
 class IngredientRecipe(models.Model):
     ingredient = models.ForeignKey(
-        Ingredient, on_delete=models.CASCADE, verbose_name='Ингредиент'
+        Ingredient, on_delete=models.CASCADE,
+        verbose_name='Ингредиент'
     )
     recipe = models.ForeignKey(
-        Recipe, on_delete=models.CASCADE, verbose_name='Рецепт'
+        Recipe, on_delete=models.CASCADE,
+        verbose_name='Рецепт'
     )
     amount = models.PositiveIntegerField('Количество')
 
     class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['ingredient', 'recipe'],
+                name='unique_ingredient_in_recipe'
+            )
+        ]
         verbose_name = 'Ингредиент рецепта'
         verbose_name_plural = 'Ингредиенты рецепта'
 
     def __str__(self):
         return (
-            f'{self.ingredient.name}, {self.amount}, {self.ingredient.measurement_unit}'
+            f'{self.ingredient.name} - {self.amount},'
+            f'{self.ingredient.measurement_unit}'
         )
 
 
@@ -137,6 +144,12 @@ class ShoppingList(models.Model):
     created = models.DateTimeField('Дата добавления', auto_now_add=True)
 
     class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recipe', 'user'],
+                name='unique_recipe_in_list'
+            )
+        ]
         verbose_name = 'Список покупок'
         verbose_name_plural = 'Список покупок'
 
