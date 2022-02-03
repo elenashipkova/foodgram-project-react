@@ -52,34 +52,24 @@ class CustomUserCreateSerializer(UserCreateSerializer):
 
 
 class IngredientRecipeSerializer(serializers.ModelSerializer):
-    # id = serializers.ReadOnlyField(source='ingredient.id')
-    # name = serializers.ReadOnlyField(source='ingredient.name')
-    # measurement_unit = serializers.ReadOnlyField(
-        # source='ingredient.measurement_unit'
-    # )
-    id = serializers.SlugRelatedField(
-        source='ingredient',
-        slug_field='id',
-        queryset=Ingredient.objects.all()
-    )
-    name = serializers.SlugRelatedField(
-        source='ingredient',
-        slug_field='name',
-        read_only=True
-    )
-    measurement_unit = serializers.SlugRelatedField(
-        source='ingredient',
-        slug_field='measurement_unit',
-        read_only=True
+    id = serializers.ReadOnlyField(source='ingredient.id')
+    name = serializers.ReadOnlyField(source='ingredient.name')
+    measurement_unit = serializers.ReadOnlyField(
+        source='ingredient.measurement_unit'
     )
 
     class Meta:
         model = IngredientRecipe
         fields = ('id', 'name', 'measurement_unit', 'amount')
 
+    def get_ingredients(self, obj):
+        qs = IngredientRecipe.objects.filter(recipe=obj)
+        return IngredientRecipeSerializer(qs, many=True).data
+
 
 class GetIngredientInRecipeSerializer(serializers.ModelSerializer):
-    id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
+    id = serializers.PrimaryKeyRelatedField(
+        source='ingredient', queryset=Ingredient.objects.all())
     amount = serializers.IntegerField()
 
     class Meta:
@@ -127,7 +117,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     tags = serializers.PrimaryKeyRelatedField(
        queryset=Tag.objects.all(), many=True
     )
-    ingredients = IngredientRecipeSerializer(many=True)
+    ingredients = GetIngredientInRecipeSerializer(many=True)
     image = Base64ImageField(max_length=None) # use_url=True)
     cooking_time = serializers.IntegerField()
 
@@ -171,7 +161,8 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                 tags_set.append(tag)
         return data
 
-    def add_ingredients_in_recipe(self, recipe, ingredients):
+    @staticmethod
+    def add_ingredients_in_recipe(recipe, ingredients):
         for ingredient in ingredients:
             IngredientRecipe.objects.get_or_create(
                 ingredient=ingredient['ingredient'],
