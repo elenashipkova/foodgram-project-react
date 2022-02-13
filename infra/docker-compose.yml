@@ -9,10 +9,8 @@ services:
       - .env
 
   backend:
-    build:
-      context: ../backend
-      image: shipkovalena/foodgram:latest
-      dockerfile: Dockerfile
+    build: ../backend
+    image: shipkovalena/foodgram:latest
     restart: always
     depends_on:
       - db

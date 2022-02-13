@@ -58,7 +58,6 @@ jobs:
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.PASSPHRASE }}
         script: |
-          cd infra/
           sudo docker pull shipkovalena/foodgram:latest
           sudo docker-compose stop
           sudo docker-compose rm backend
