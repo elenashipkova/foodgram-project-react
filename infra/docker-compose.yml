@@ -9,7 +9,6 @@ services:
       - .env
 
   backend:
-    build: ../backend/foodgram
     image: shipkovalena/foodgram:latest
     restart: always
     depends_on:
@@ -22,7 +21,7 @@ services:
 
   frontend:
     build:
-      context: ../frontend
+      context: ./frontend
       dockerfile: Dockerfile
     volumes:
       - ../frontend/:/app/result_build/
