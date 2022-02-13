@@ -6,10 +6,10 @@ from rest_framework.response import Response
 
 
 class RecipeInFavoritesAndShoppingListViewSet(mixins.CreateModelMixin,
-                                             mixins.DestroyModelMixin,
-                                             mixins.ListModelMixin,
-                                             mixins.RetrieveModelMixin,
-                                             viewsets.GenericViewSet):
+                                              mixins.DestroyModelMixin,
+                                              mixins.ListModelMixin,
+                                              mixins.RetrieveModelMixin,
+                                              viewsets.GenericViewSet):
     pagination_class = PageNumberPagination
     permission_classes = (IsAuthenticated,)
 

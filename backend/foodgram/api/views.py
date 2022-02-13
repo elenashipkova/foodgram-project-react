@@ -2,24 +2,22 @@ from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django.http.response import HttpResponse
 from django.shortcuts import get_object_or_404
-from rest_framework import mixins, status, views, viewsets
+from recipes.models import (FavoritesList, Follow, Ingredient,
+                            IngredientRecipe, Recipe, ShoppingList, Tag)
+from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
-from recipes.models import (FavoritesList, Follow, Ingredient,
-                            IngredientRecipe, Recipe, ShoppingList, Tag)
 from .filters import IngredientFilter, RecipeFilter
 from .mixins import RecipeInFavoritesAndShoppingListViewSet
 from .permissions import IsAuthorOrAdmin
 from .serializers import (FavoritesListSerializer, FollowSerializer,
-                          IngredientSerializer,
-                          RecipeCreateSerializer,
+                          IngredientSerializer, RecipeCreateSerializer,
                           RecipeListSerializer, ShoppingListSerializer,
-                          TagSerializer,
-                          UserFollowerSerializer)
+                          TagSerializer, UserFollowerSerializer)
 
 User = get_user_model()
 
@@ -58,7 +56,7 @@ class RecipeViewSet(ModelViewSet):
 class FollowViewSet(ModelViewSet):
     permission_classes = (IsAuthenticated,)
     pagination_class = PageNumberPagination
-    
+
     def get_queryset(self):
         return User.objects.filter(following__user=self.request.user)
 
@@ -68,7 +66,7 @@ class FollowViewSet(ModelViewSet):
         return FollowSerializer
 
     def create(self, request, *args, **kwargs):
-        data=request.data
+        data = request.data
         data['user'] = request.user.id
         data['author'] = kwargs.get('author_id')
         serializer = self.get_serializer(data=data)
@@ -81,7 +79,7 @@ class FollowViewSet(ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         instance = get_object_or_404(
-            Follow, user=request.user.id,author=kwargs.get('author_id')
+            Follow, user=request.user.id, author=kwargs.get('author_id')
         )
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)

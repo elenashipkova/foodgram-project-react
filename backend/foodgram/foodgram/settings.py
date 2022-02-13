@@ -1,7 +1,6 @@
 import os
 
 from dotenv import load_dotenv
-from pathlib import Path
 
 load_dotenv()
 
@@ -9,7 +8,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = os.getenv('SECRET_KEY', default='django-insecure-15+-i_ikm#l&x=a!=lf+87@3q0s!npt7_fb-58=zxl@gp=w8gv')
 
-DEBUG = os.getenv('DEBUG_VALUE') == True
+DEBUG = os.getenv('DEBUG_VALUE') == 'True'
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', default='*').split()
 
@@ -125,7 +124,7 @@ DJOSER = {
         'user_list': ['rest_framework.permissions.AllowAny'],
         'token_create': ['rest_framework.permissions.AllowAny'],
         'token_destroy': ['rest_framework.permissions.IsAuthenticated'],
-    }, 
+    },
 }
 
 LANGUAGE_CODE = 'en-us'

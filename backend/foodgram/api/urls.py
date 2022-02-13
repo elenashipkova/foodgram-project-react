@@ -2,8 +2,8 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from .views import (DownloadShoppingList, FavoritesListViewSet, FollowViewSet,
-                    IngredientViewSet, ShoppingListViewSet, TagViewSet,
-                    RecipeViewSet)
+                    IngredientViewSet, RecipeViewSet, ShoppingListViewSet,
+                    TagViewSet)
 
 router = DefaultRouter()
 
