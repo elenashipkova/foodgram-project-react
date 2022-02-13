@@ -4,11 +4,10 @@ from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
+
+from users.models import User
 from recipes.models import (FavoritesList, Follow, Ingredient,
                             IngredientRecipe, Recipe, ShoppingList, Tag)
-from users.models import User
-
-User = get_user_model()
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -114,7 +113,7 @@ class RecipeListSerializer(serializers.ModelSerializer):
 class RecipeCreateSerializer(serializers.ModelSerializer):
     author = CustomUserSerializer(read_only=True)
     tags = serializers.PrimaryKeyRelatedField(
-       queryset=Tag.objects.all(), many=True)
+        queryset=Tag.objects.all(), many=True)
     ingredients = GetIngredientInRecipeSerializer(many=True)
     image = Base64ImageField(max_length=None)
     cooking_time = serializers.IntegerField()
