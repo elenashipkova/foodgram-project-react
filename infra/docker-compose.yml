@@ -20,6 +20,8 @@ services:
       - .env
 
   frontend:
+    build:
+      dockerfile: Dockerfile
     volumes:
       - ../frontend/:/app/result_build/
 
