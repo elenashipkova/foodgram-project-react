@@ -6,11 +6,12 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     env_file:
-      - ../backend/foodgram/.env
+      - .env
 
   backend:
     build:
       context: ../backend
+      image: shipkovalena/foodgram:latest
       dockerfile: Dockerfile
     restart: always
     depends_on:
@@ -19,7 +20,7 @@ services:
       - static_value:/code/static/
       - media_value:/code/media/
     env_file:
-      - ../backend/foodgram/.env
+      - .env
 
   frontend:
     build:
