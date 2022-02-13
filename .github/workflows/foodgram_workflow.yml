@@ -45,6 +45,12 @@ jobs:
           file: ./backend/foodgram/Dockerfile
           push: true
           tags: shipkovalena/foodgram:latest
+      - name: Push frontend to Docker Hub
+          uses: docker/build-push-action@v2
+          with:
+            context: ./frontend
+            push: true
+            tags: shipkovalena/frontend:latest
 
   deploy:
     runs-on: ubuntu-latest
@@ -58,7 +64,8 @@ jobs:
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.PASSPHRASE }}
         script: |
-          sudo docker pull shipkovalena/foodgram:latest
+          sudo docker pull shipkovalena/frontend
+          sudo docker pull shipkovalena/foodgram
           sudo docker-compose stop
           sudo docker-compose rm backend
           touch .env 
