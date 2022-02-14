@@ -14,15 +14,15 @@ services:
     depends_on:
       - db
     volumes:
-      - static_value:/code/staticfiles/
-      - media_value:/code/mediafiles/
+      - static_value:/app/staticfiles/
+      - media_value:/app/mediafiles/
     env_file:
       - .env
 
   frontend:
     image: shipkovalena/frontend:latest
     volumes:
-      - ../frontend/:/code/result_build/
+      - ../frontend/:/app/result_build/
 
   nginx:
     image: nginx:1.19.3
