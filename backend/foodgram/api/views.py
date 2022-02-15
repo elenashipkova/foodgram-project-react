@@ -117,6 +117,6 @@ class DownloadShoppingList(APIView):
                 f'{item} ({shop_list[item]["measurement_unit"]}) - '
                 f'{shop_list[item]["amount"]} \n')
         filename = 'shopping_cart.txt'
-        response = HttpResponse(download_list, content_type='text/plain')
+        response = HttpResponse('ghjghjkk', content_type='text/plain')
         response['Content-Disposition'] = f'attachment; filename={filename}'
         return response
