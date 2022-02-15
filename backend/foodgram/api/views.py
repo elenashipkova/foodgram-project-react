@@ -111,11 +111,6 @@ class DownloadShoppingList(APIView):
                 'ingredient__name', 'ingredient__measurement_unit').annotate(
                     amount=Sum('amount'))
 
-        # download_list = []
-        # for item in shop_list:
-            # download_list.append(
-                # f'{item} ({shop_list[item]["measurement_unit"]}) - '
-               # f'{shop_list[item]["amount"]} \n')
         filename = 'shopping_cart.txt'
         response = HttpResponse(shop_list, content_type='text/plain')
         response['Content-Disposition'] = f'attachment; filename={filename}'
