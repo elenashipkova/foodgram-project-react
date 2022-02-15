@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.db.models import F
 from django.db.models import Sum
 from django.http.response import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -109,9 +110,16 @@ class DownloadShoppingList(APIView):
         shop_list = IngredientRecipe.objects.filter(
             recipe__shopping_cart__user=request.user).values(
                 'ingredient__name', 'ingredient__measurement_unit').annotate(
-                    amount=Sum('amount'))
+                    name=F('ingredient__name'),
+                    units=F('ingredient__measurement_unit'),
+                    total=Sum('amount'))
+
+        text = '\n'.join([
+            f"{item['name']} ({item['units']}) - {item['total']}"
+            for item in shop_list
+        ])
 
         filename = 'shopping_cart.txt'
-        response = HttpResponse(shop_list, content_type='text/plain')
+        response = HttpResponse(text, content_type='text/plain')
         response['Content-Disposition'] = f'attachment; filename={filename}'
         return response
