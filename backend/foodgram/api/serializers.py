@@ -99,10 +99,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     author = CustomUserSerializer(read_only=True)
     tags = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(), many=True)
-    ingredients = IngredientRecipeSerializer(
-        source='ingredient_recipe',
-        many=True
-    )
+    ingredients = IngredientRecipeSerializer(many=True)
     image = Base64ImageField()
     cooking_time = serializers.IntegerField()
 
@@ -119,36 +116,30 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, data):
-        ingredients = self.initial_data.get('ingredients')
+        ingredients = data['ingredients']
         if not ingredients:
             raise serializers.ValidationError('Укажите ингредиенты!')
-        ingredients_set = []
-        for ingredient_item in ingredients:
-            ingredient = get_object_or_404(
-                Ingredient, id=ingredient_item['id']
-            )
-            if ingredient in ingredients_set:
-                raise serializers.ValidationError(
-                    'Ингредиенты в рецепте не должны повторяться!'
-                )
-            ingredients_set.append(ingredient)
-
-            if int(ingredient_item.get('amount')) <= 0:
+        ingredients_set = {}
+        for ingredient in ingredients:
+            if ingredient['amount'] <= 0:
                 raise serializers.ValidationError(
                     'Количество ингредиентов должно быть больше 0'
                 )
-        data['ingredients'] = ingredients
+            if (instance := ingredient['ingredient']) not in ingredients_set:
+                ingredients_set[instance] = True
+            else:
+                raise serializers.ValidationError(
+                    'Ингредиенты в рецепте не должны повторяться!'
+                )
 
-        tags = self.initial_data.get('tags')
-        tags_set = []
+        tags = data['tags']
+        tags_set = {}
         for tag in tags:
             if tag in tags_set:
                 raise serializers.ValidationError(
                     'Повторяющихся тегов в одном рецепе быть не должно!'
                 )
-            else:
-                tags_set.append(tag)
-        data['tags'] = tags
+            tags_set['tag'] = True
         return data
 
     def to_representation(self, instance):
