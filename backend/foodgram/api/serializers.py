@@ -1,6 +1,6 @@
 from django.core.exceptions import ValidationError
-from djoser.serializers import UserCreateSerializer, UserSerializer
 from django.shortcuts import get_object_or_404
+from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from recipes.models import (FavoritesList, Follow, Ingredient,
                             IngredientRecipe, Recipe, ShoppingList, Tag)
@@ -138,7 +138,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                     'Количество ингредиентов должно быть больше 0'
                 )
         data['ingredients'] = ingredients
-                
+    
         tags = self.initial_data.get('tags')
         tags_set = []
         for tag in tags:
