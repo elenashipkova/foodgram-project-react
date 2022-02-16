@@ -112,7 +112,7 @@ class DownloadShoppingList(APIView):
             recipe__shopping_cart__user=request.user_id).values(
                 name=F('ingredient__name'),
                 measurement_unit=F('ingredient__measurement_unit')
-                ).annotate(amount=Sum('amount'))
+        ).annotate(amount=Sum('amount'))
 
         text = '\n'.join([
             f"{item['name']} ({item['measurement_unit']}) - {item['amount']}"
