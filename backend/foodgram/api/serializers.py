@@ -58,20 +58,6 @@ class IngredientRecipeSerializer(serializers.ModelSerializer):
         model = IngredientRecipe
         fields = ('id', 'name', 'measurement_unit', 'amount')
 
-    def get_ingredients(self, obj):
-        qs = IngredientRecipe.objects.filter(recipe=obj)
-        return IngredientRecipeSerializer(qs, many=True).data
-
-
-class GetIngredientInRecipeSerializer(serializers.ModelSerializer):
-    id = serializers.PrimaryKeyRelatedField(
-        source='ingredient', queryset=Ingredient.objects.all())
-    amount = serializers.IntegerField()
-
-    class Meta:
-        model = IngredientRecipe
-        fields = ('id', 'amount')
-
 
 class RecipeListSerializer(serializers.ModelSerializer):
     author = CustomUserSerializer(read_only=True)
@@ -112,7 +98,10 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     author = CustomUserSerializer(read_only=True)
     tags = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(), many=True)
-    ingredients = GetIngredientInRecipeSerializer(many=True)
+    ingredients = IngredientRecipeSerializer(
+        source='ingredient_recipe',
+        many=True
+    )
     image = Base64ImageField()
     cooking_time = serializers.IntegerField()
 
