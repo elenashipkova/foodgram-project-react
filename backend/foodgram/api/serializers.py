@@ -113,7 +113,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     tags = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(), many=True)
     ingredients = GetIngredientInRecipeSerializer(many=True)
-    image = Base64ImageField(max_length=None)
+    image = Base64ImageField()
     cooking_time = serializers.IntegerField()
 
     class Meta:
@@ -166,9 +166,10 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             )
 
     def create(self, validated_data):
+        image = validated_data.pop('image')
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
-        recipe = Recipe.objects.create(**validated_data)
+        recipe = Recipe.objects.create(image=image, **validated_data)
         recipe.tags.set(tags)
         self.add_ingredients_in_recipe(recipe, ingredients)
         return recipe
