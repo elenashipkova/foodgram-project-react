@@ -9,25 +9,23 @@
 
 ## Технологии
 
-* Python 3.8.5
+* Python
 
-* Django 3.0.5
+* Django
 
-* Django Rest Framework 3.11.0
+* Django Rest Framework
 
-* Django Rest Framework Simple JWT 4.3.0
+* Postgres
 
-* Postgres 12.4
+* Gunicorn
 
-* Gunicorn 20.0.4
+* Psycopg2-binary
 
-* Psycopg2-binary 2.8.6
+* Nginx
 
-* Nginx 1.19.3
+* Docker
 
-* Docker 20.10.8
-
-* docker-compose 1.29.2
+* docker-compose
 
 
 ## Установка
@@ -49,7 +47,6 @@
     DB_PORT=5432   # порт для подключения к БД
     SECRET_KEY=   # ваш секретный ключ
     DEBUG_VALUE=False
-    ALLOWED_HOSTS=[*]
     DOCKER_USERNAME, DOCKER_PASSWORD  # имя пользователя и пароль DockerHub для скачивания образа
     USER, HOST, SSH_KEY, PASSPHRASE  # имя и IP-адрес вашего сервера, приватный ssh-ключ, пароль, если используется
     TELEGRAM_TO, TELEGRAM_TOKEN  # ID вашего аккаунта в телеграм, токен вашего бота
@@ -70,22 +67,24 @@
     1. применить миграции:
 
     ```bash
-    docker-compose exec web python3 manage.py migrate --noinput
+    sudo docker-compose exec backend python manage.py migrate --noinput
     ```
 
     2. создать суперпользователя:
     
     ```bash
-    docker-compose exec web python3 manage.py createsuperuser
+    sudo docker-compose exec backend python manage.py createsuperuser
     ```
 
-    3. заполнить базу данных:
+    3. загрузить ингредиенты в базу данных:
 
     ```bash
-    docker-compose exec web python3 manage.py loaddata fixtures.json
+    sudo docker-compose exec backend python manage.py load_data
     ```
 
 ## Развернутый проект доступен по адресу: _http://62.84.119.202_
+
+* Тестовый админ-пользователь: email: admin@mail.ru, пароль: Qwe54321
 
     
 ## Автор
