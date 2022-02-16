@@ -1,4 +1,5 @@
 from django.core.exceptions import ValidationError
+from django.db.models import F
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from recipes.models import (FavoritesList, Follow, Ingredient,
@@ -59,6 +60,15 @@ class IngredientRecipeSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'measurement_unit', 'amount')
 
 
+class AddIngredientSerializer(serializers.ModelSerializer):
+    id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
+    amount = serializers.IntegerField()
+
+    class Meta:
+        model = IngredientRecipe
+        fields = ('id', 'amount')
+
+
 class RecipeListSerializer(serializers.ModelSerializer):
     author = CustomUserSerializer(read_only=True)
     ingredients = serializers.SerializerMethodField()
@@ -98,7 +108,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     author = CustomUserSerializer(read_only=True)
     tags = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(), many=True)
-    ingredients = IngredientRecipeSerializer(many=True)
+    ingredients = AddIngredientSerializer(many=True)
     image = Base64ImageField()
     cooking_time = serializers.IntegerField()
 
@@ -146,10 +156,14 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
     def add_ingredients_in_recipe(self, recipe, ingredients):
         for ingredient in ingredients:
-            IngredientRecipe.objects.get_or_create(
-                ingredient_id=ingredient.get('id'),
-                amount=ingredient.get('amount'),
-                recipe=recipe
+            ingredient_id = ingredient['id']
+            amount = ingredient['amount']
+            if IngredientRecipe.objects.filter(
+                recipe=recipe, ingredient=ingredient_id).exists():
+                amount += F('amount')
+            IngredientRecipe.objects.update_or_create(
+                recipe=recipe, ingredient=ingredient_id,
+                defaults={'amount': amount}
             )
 
     def create(self, validated_data):
