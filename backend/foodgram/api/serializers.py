@@ -155,14 +155,14 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         return serializer.data
 
     def add_ingredients_in_recipe(self, recipe, ingredients):
-        for ingredient in ingredients:
-            ingredient_id = ingredient['id']
-            amount = ingredient['amount']
+        for item in ingredients:
+            item_id = item['id']
+            amount = item['amount']
             if IngredientRecipe.objects.filter(recipe=recipe,
-                                               ingredient=ingredient_id).exists():
+                                               ingredient=item_id).exists():
                 amount += F('amount')
             IngredientRecipe.objects.update_or_create(
-                recipe=recipe, ingredient=ingredient_id,
+                recipe=recipe, ingredient=item_id,
                 defaults={'amount': amount}
             )
 
