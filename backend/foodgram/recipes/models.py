@@ -37,9 +37,7 @@ class Recipe(models.Model):
     name = models.CharField('Название', max_length=200)
     text = models.TextField('Описание рецепта')
     cooking_time = models.PositiveIntegerField('Время приготовления в мин')
-    image = models.ImageField(
-        'Фото рецепта', upload_to='recipes/images/', blank=True, null=True
-    )
+    image = models.ImageField('Фото рецепта', upload_to='recipes/images/')
     ingredients = models.ManyToManyField(
         Ingredient, through='IngredientRecipe',
         verbose_name='Ингредиенты'

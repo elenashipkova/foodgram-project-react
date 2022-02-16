@@ -155,6 +155,10 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             else:
                 tags_set.append(tag)
         return data
+    
+    def to_representation(self, instance):
+        serializer = RecipeListSerializer(instance)
+        return serializer.data
 
     @staticmethod
     def add_ingredients_in_recipe(recipe, ingredients):
