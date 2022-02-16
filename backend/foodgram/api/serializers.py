@@ -114,32 +114,31 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             )
         return value
 
-    def validate(self, data):
-        ingredients = data['ingredients']
+    def validate_ingredients(self, value):
+        ingredients = self.initial_data.get('ingredients')
         if not ingredients:
             raise serializers.ValidationError('Укажите ингредиенты!')
-        ingredients_set = {}
+        ingredients_set = []
         for ingredient in ingredients:
-            if ingredient['amount'] <= 0:
+            if int(ingredient['amount']) <= 0:
                 raise serializers.ValidationError(
                     'Количество ингредиентов должно быть больше 0'
                 )
-            if (instance := ingredient['ingredient']) not in ingredients_set:
-                ingredients_set[instance] = True
-            else:
+            if ingredient['id'] in ingredients_set:
                 raise serializers.ValidationError(
                     'Ингредиенты в рецепте не должны повторяться!'
                 )
+            else:
+                ingredients_set.append(ingredient['id'])
+        return value
 
-        tags = data['tags']
-        tags_set = {}
-        for tag in tags:
-            if tag in tags_set:
-                raise serializers.ValidationError(
-                    'Повторяющихся тегов в одном рецепе быть не должно!'
-                )
-            tags_set['tag'] = True
-        return data
+    def validate_tags(self, value):
+        tags = self.initial_data.get('tags')
+        if len(tags) > len(set(tags)):
+            raise serializers.ValidationError(
+                'Повторяющихся тегов в одном рецепе быть не должно!'
+            )
+        return value
 
     def to_representation(self, instance):
         serializer = RecipeListSerializer(instance)
