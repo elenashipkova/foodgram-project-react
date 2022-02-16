@@ -5,7 +5,6 @@ from django.shortcuts import get_object_or_404
 from recipes.models import (FavoritesList, Follow, Ingredient,
                             IngredientRecipe, Recipe, ShoppingList, Tag)
 from rest_framework import status
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -13,6 +12,7 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from .filters import IngredientFilter, RecipeFilter
 from .mixins import RecipeInFavoritesAndShoppingListViewSet
+from .pagination import LimitPageNumberPagination
 from .permissions import IsAuthorOrAdmin
 from .serializers import (FavoritesListSerializer, FollowSerializer,
                           IngredientSerializer, RecipeCreateSerializer,
@@ -39,7 +39,7 @@ class RecipeViewSet(ModelViewSet):
     queryset = Recipe.objects.all()
     permission_classes = (IsAuthorOrAdmin,)
     filterset_class = RecipeFilter
-    pagination_class = PageNumberPagination
+    pagination_class = LimitPageNumberPagination
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -55,7 +55,7 @@ class RecipeViewSet(ModelViewSet):
 
 class FollowViewSet(ModelViewSet):
     permission_classes = (IsAuthenticated,)
-    pagination_class = PageNumberPagination
+    pagination_class = LimitPageNumberPagination
 
     def get_queryset(self):
         return User.objects.filter(following__user=self.request.user)
@@ -88,7 +88,7 @@ class FollowViewSet(ModelViewSet):
 class FavoritesListViewSet(RecipeInFavoritesAndShoppingListViewSet):
     queryset = FavoritesList.objects.order_by('-recipe__pub_date')
     serializer_class = FavoritesListSerializer
-    pagination_class = PageNumberPagination
+    pagination_class = LimitPageNumberPagination
 
     class Meta:
         model = FavoritesList
