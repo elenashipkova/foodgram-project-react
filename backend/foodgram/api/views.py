@@ -88,6 +88,7 @@ class FollowViewSet(ModelViewSet):
 class FavoritesListViewSet(RecipeInFavoritesAndShoppingListViewSet):
     queryset = FavoritesList.objects.order_by('-recipe__pub_date')
     serializer_class = FavoritesListSerializer
+    pagination_class = PageNumberPagination
 
     class Meta:
         model = FavoritesList
@@ -96,6 +97,7 @@ class FavoritesListViewSet(RecipeInFavoritesAndShoppingListViewSet):
 class ShoppingListViewSet(RecipeInFavoritesAndShoppingListViewSet):
     queryset = ShoppingList.objects.order_by('-created')
     serializer_class = ShoppingListSerializer
+    pagination_class = None
 
     class Meta:
         model = ShoppingList

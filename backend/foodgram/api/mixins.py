@@ -1,6 +1,5 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import mixins, status, viewsets
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -10,7 +9,6 @@ class RecipeInFavoritesAndShoppingListViewSet(mixins.CreateModelMixin,
                                               mixins.ListModelMixin,
                                               mixins.RetrieveModelMixin,
                                               viewsets.GenericViewSet):
-    pagination_class = PageNumberPagination
     permission_classes = (IsAuthenticated,)
 
     def create(self, request, *args, **kwargs):
