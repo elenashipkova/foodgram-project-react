@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404
 from recipes.models import (FavoritesList, Follow, Ingredient,
                             IngredientRecipe, Recipe, ShoppingList, Tag)
 from rest_framework import status
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -51,6 +52,25 @@ class RecipeViewSet(ModelViewSet):
         if self.action in ['list', 'retrieve']:
             return RecipeListSerializer
         return RecipeCreateSerializer
+    
+    @action(detail=False, methods=['get'],
+            permission_classes=(IsAuthenticated,))
+    def download_shopping_cart(self, request):
+        shop_list = IngredientRecipe.objects.filter(
+            recipe__shopping_cart__user=request.user).values(
+                name=F('ingredient__name'),
+                measurement_unit=F('ingredient__measurement_unit')
+        ).annotate(amount=Sum('amount'))
+
+        text = '\n'.join([
+            f"{item['name']} ({item['measurement_unit']}) - {item['amount']}"
+            for item in shop_list
+        ])
+
+        filename = 'shopping_cart.txt'
+        response = HttpResponse(text, content_type='text/plain')
+        response['Content-Disposition'] = f'attachment; filename={filename}'
+        return response
 
 
 class FollowViewSet(ModelViewSet):
@@ -101,25 +121,3 @@ class ShoppingListViewSet(RecipeInFavoritesAndShoppingListViewSet):
 
     class Meta:
         model = ShoppingList
-
-
-class DownloadShoppingList(APIView):
-    permission_classes = (IsAuthenticated,)
-
-    def get(self, request):
-
-        shop_list = IngredientRecipe.objects.filter(
-            recipe__shopping_cart__user=request.user_id).values(
-                name=F('ingredient__name'),
-                measurement_unit=F('ingredient__measurement_unit')
-        ).annotate(amount=Sum('amount'))
-
-        text = '\n'.join([
-            f"{item['name']} ({item['measurement_unit']}) - {item['amount']}"
-            for item in shop_list
-        ])
-
-        filename = 'shopping_cart.txt'
-        response = HttpResponse(text, content_type='text/plain')
-        response['Content-Disposition'] = f'attachment; filename={filename}'
-        return response

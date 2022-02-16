@@ -210,14 +210,7 @@ class ShoppingListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ShoppingList
-        fields = '__all__'
-
-    def validate(self, data):
-        user = data['user']
-        recipe = data['recipe'].id
-        if ShoppingList.objects.filter(user=user, recipe__id=recipe).exists():
-            raise ValidationError('Рецепт уже добавлен в список покупок!')
-        return data
+        fields = ('user', 'recipe')
 
     def to_representation(self, obj):
         return {
