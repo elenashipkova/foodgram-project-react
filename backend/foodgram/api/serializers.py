@@ -1,5 +1,6 @@
 from django.core.exceptions import ValidationError
 from djoser.serializers import UserCreateSerializer, UserSerializer
+from django.shortcuts import get_object_or_404
 from drf_extra_fields.fields import Base64ImageField
 from recipes.models import (FavoritesList, Follow, Ingredient,
                             IngredientRecipe, Recipe, ShoppingList, Tag)
@@ -118,23 +119,27 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, data):
-        ingredients = data['ingredients']
-        ingredients_set = []
+        ingredients = self.initial_data.get('ingredients')
         if not ingredients:
             raise serializers.ValidationError('Укажите ингредиенты!')
-        for ingredient in ingredients:
-            if int(ingredient['amount']) <= 0:
-                raise serializers.ValidationError(
-                    'Количество ингредиентов должно быть больше 0'
-                )
-            if ingredient['ingredient'] in ingredients_set:
+        ingredients_set = []
+        for ingredient_item in ingredients:
+            ingredient = get_object_or_404(
+                Ingredient, id=ingredient_item['id']
+            )
+            if ingredient in ingredients_set:
                 raise serializers.ValidationError(
                     'Ингредиенты в рецепте не должны повторяться!'
                 )
-            else:
-                ingredients_set.append(ingredient['ingredient'])
+            ingredients_set.append(ingredient)
 
-        tags = data['tags']
+            if int(ingredient_item.get('amount')) <= 0:
+                raise serializers.ValidationError(
+                    'Количество ингредиентов должно быть больше 0'
+                )
+        data['ingredients'] = ingredients
+                
+        tags = self.initial_data.get('tags')
         tags_set = []
         for tag in tags:
             if tag in tags_set:
@@ -143,18 +148,18 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                 )
             else:
                 tags_set.append(tag)
+        data['tags'] = tags
         return data
 
     def to_representation(self, instance):
         serializer = RecipeListSerializer(instance)
         return serializer.data
 
-    @staticmethod
-    def add_ingredients_in_recipe(recipe, ingredients):
+    def add_ingredients_in_recipe(self, recipe, ingredients):
         for ingredient in ingredients:
             IngredientRecipe.objects.get_or_create(
-                ingredient=ingredient['ingredient'],
-                amount=ingredient['amount'],
+                ingredient_id=ingredient.get('id'),
+                amount=ingredient.get('amount'),
                 recipe=recipe
             )
 
