@@ -134,6 +134,7 @@ dmypy.json
 .vscode/
 /recipes/images/
 static/
+staticfiles/
 media/
 *.jpg
 *.png
