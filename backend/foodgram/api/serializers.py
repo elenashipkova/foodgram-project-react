@@ -138,7 +138,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                     'Количество ингредиентов должно быть больше 0'
                 )
         data['ingredients'] = ingredients
-    
+
         tags = self.initial_data.get('tags')
         tags_set = []
         for tag in tags:
